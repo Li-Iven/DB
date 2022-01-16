@@ -1,0 +1,114 @@
++1. Пары групп одной специальности заданной кафедры
++2. Группы, которые не занимаются у заданного преподавателя
++3. Определить группы, имеющие максимальную среднюю оценку
++4. Определить задолжников по заданному предмету (2 = 2, 0 = неявка)
++5. Преподаватели, у которых выше среднего количество задолжников
++6. По данной специальности определить наиболее успешные предметы (их средняя оценка выше средней по всем предметам)
++7. Придумать и реализовать запрос на EXIST (Список студентов, которые не сдали хотя бы один экзамен/зачёт) 
++8. Определить даты экзаменов с наихудшими средними результатами
+
+1.
+SELECT DISTINCT a.id_speciality, a.group_name as gr1, b.group_name as gr2;
+ FROM departament, speciality, groups as a, groups as b;
+ WHERE  a.id_speciality = b.id_speciality AND a.id_group > b.id_group AND a.id_dep = 806 AND b.id_dep = 806
+
+
+2.
+SELECT exams.id_group;
+ FROM exams, teachers  INTO CURSOR tmp;
+ WHERE  exams.id_teacher = teachers.id_teacher AND teachers.fio = 'Формалёв Владимир Фёдорович'
+
+SELECT groups.id_group;
+FROM groups;
+WHERE groups.id_group NOT IN (SELECT tmp.id_group FROM tmp)
+
+// объединённый запрос
+SELECT DISTINCT groups.id_group;
+FROM groups;
+ WHERE groups.id_group NOT IN (SELECT id_group FROM exams, teachers;
+ WHERE  exams.id_teacher = teachers.id_teacher AND fio = 'Формалёв Владимир Фёдорович ')
+
+3.
+SELECT students.id_group, AVG(CAST(grades.grade as float)) as avg_grade;
+FROM grades, students INTO CURSOR tmp;
+WHERE grades.id_student = students.id_student AND grades.grade <> ( 1 ) AND grades.grade <> ( 0 ) ;
+ GROUP BY students.id_group
+
+SELECT groups.group_name, tmp.avg_grade ;
+FROM groups, tmp;
+WHERE tmp.avg_grade = (SELECT MAX(avg_grade) FROM tmp) AND tmp.id_group = groups.id_group 
+
+4.
+SELECT DISTINCT (SELECT name FROM students;
+ WHERE grades.id_student = students.id_student);
+ FROM grades, exams;
+ WHERE (grades.grade = (0) OR grades.grade = (2));
+ AND (exams.id_subject = subjects.id_subject) AND (subjects.subject_name = 'Физика');
+ AND (exams.id_exam = grades.id_exam))
+
+SELECT surname, name, patronymic FROM students, grades, exams, subjects;
+ WHERE grades.id_student = students.id_student AND;
+  (grades.grade = (0) OR grades.grade = (2));
+ AND (exams.id_subject = subjects.id_subject) AND subjects.subject_name = 'Уравнения математической физики' AND (exams.id_exam = grades.id_exam);
+ORDER BY surname
+
+
+5.
+SELECT DISTINCT teachers.fio as fio, COUNT(grades.id_student) as Count_debtors;
+ FROM teachers, exams, grades INTO CURSOR tmp;
+ WHERE  (grades.grade = 2 OR grades.grade = 0) AND (exams.id_exam = grades.id_exam) AND;
+ (teachers.id_teacher = exams.id_teacher);
+ GROUP BY teachers.fio
+
+SELECT tmp.fio;
+ FROM tmp;
+ WHERE (tmp.Count_debtors > (SELECT AVG(CAST(Count_debtors as float)) FROM tmp))
+
+6.
+SELECT DISTINCT grades.id_exam as ex, grades.grade;
+ FROM exams, grades, groups, speciality INTO CURSOR tmp;
+ WHERE (grade <> 1 AND grade <> 0) AND (grades.id_exam = exams.id_exam) AND (exams.id_group = groups.id_group) AND;
+ (groups.id_speciality = speciality.id_speciality) AND (speciality_name == 'Прикладная математика и информатика');
+ GROUP BY grades.id_exam, grades.grade
+
+SELECT DISTINCT subject_name as sub, AVG(CAST(grade as float)) as Avg_grade;
+ FROM subjects, exams, tmp INTO CURSOR tmp1;
+ WHERE (exams.id_exam = tmp.ex) AND (subjects.id_subject = exams.id_subject);
+ GROUP BY subjects.subject_name
+
+SELECT tmp1.sub, tmp1.Avg_grade;
+ FROM tmp1 WHERE (tmp1.Avg_grade > (SELECT AVG(CAST(tmp1.Avg_grade as float)) FROM tmp1))
+
+7.
+SELECT students.*;
+ FROM students;
+ WHERE EXISTS (SELECT grades.id_grade FROM grades WHERE students.id_student = grades.id_student AND (grades.grade = 0 OR grades.grade = 2))
+
+8.
+SELECT exams.id_exam, AVG(CAST(grades.grade AS float)) AS avg_grade;
+ FROM exams, grades  INTO CURSOR tmp;
+ WHERE grades.id_exam = exams.id_exam;
+   AND  grades.grade <> ( 0 ) ;
+   AND  grades.grade <> ( 1 );
+ GROUP BY exams.id_exam
+
+SELECT exams.data, tmp.avg_grade ;
+FROM exams, tmp;
+WHERE tmp.avg_grade = (SELECT MIN(tmp.avg_grade) FROM tmp);
+AND exams.id_exam = tmp.id_exam
+
+/// Простые запросы ///
+
+SELECT group_name;
+ FROM groups;
+ WHERE id_dep = 804
+
+SELECT students.id_student, surname, name, patronymic, COUNT(id_grade) as Count_debts;
+ FROM grades, students;
+ WHERE (grade = 2 OR grade = 0) AND students.id_student = grades.id_student;
+ GROUP BY students.id_student, surname, name, patronymic
+
+SELECT MAX(data);
+ FROM exams
+
+*Сохранить запросы как запросы в FoxPro
